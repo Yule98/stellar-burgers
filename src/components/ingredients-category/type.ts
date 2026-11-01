@@ -5,4 +5,5 @@ export type TIngredientsCategoryProps = {
   titleRef: React.RefObject<HTMLHeadingElement | null>;
   ingredients: TIngredient[];
   ref?: React.Ref<HTMLUListElement>;
+  onIngredientClick: (ingredient: TIngredient) => void;
 };

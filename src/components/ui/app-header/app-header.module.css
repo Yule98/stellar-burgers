@@ -17,8 +17,14 @@
 
 .link {
   display: flex;
+  align-items: center;
   color: var(--text-inactive-color);
   text-decoration: none;
+  cursor: pointer;
+}
+
+.link:hover {
+  color: var(--text-default-color);
 }
 
 .link_active {

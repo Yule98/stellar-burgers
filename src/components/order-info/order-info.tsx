@@ -1,42 +1,60 @@
 import { Preloader, OrderInfoUI } from '@ui';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
+
+import { fetchIngredients } from '../../services/ingredientsSlice';
+import { fetchOrderByNumber } from '../../services/orderSlice';
+import { useDispatch, useSelector } from '../../services/store';
 
 import type { TIngredient } from '@utils-types';
 
 export const OrderInfo = (): React.JSX.Element => {
-  /** TODO: взять переменные orderData и ingredients из стора */
-  const orderData = {
-    createdAt: '',
-    ingredients: [],
-    _id: '',
-    status: '',
-    name: '',
-    updatedAt: 'string',
-    number: 0,
-  };
+  const { number } = useParams<{ number: string }>();
+  const dispatch = useDispatch();
 
-  const ingredients: TIngredient[] = [];
+  const orderNumber = Number(number);
 
-  /* Готовим данные для отображения */
+  const isValidNumber =
+    /^\d+$/.test(number ?? '') && Number.isSafeInteger(orderNumber) && orderNumber > 0;
+
+  const {
+    order: orderData,
+    status: orderStatus,
+    error: orderError,
+  } = useSelector((state) => state.order);
+
+  const {
+    ingredients,
+    status: ingredientsStatus,
+    error: ingredientsError,
+  } = useSelector((state) => state.ingredients);
+
+  useEffect(() => {
+    if (isValidNumber) {
+      void dispatch(fetchOrderByNumber(orderNumber));
+    }
+  }, [dispatch, orderNumber, isValidNumber]);
+
   const orderInfo = useMemo(() => {
-    if (!orderData || !ingredients.length) return null;
-
-    const date = new Date(orderData.createdAt);
+    if (!orderData || orderData.number !== orderNumber || !ingredients.length) {
+      return null;
+    }
 
     type TIngredientsWithCount = Record<string, TIngredient & { count: number }>;
 
     const ingredientsInfo = orderData.ingredients.reduce(
-      (acc: TIngredientsWithCount, item) => {
-        if (!acc[item]) {
-          const ingredient = ingredients.find((ing) => ing._id === item);
+      (acc: TIngredientsWithCount, id: string) => {
+        if (acc[id]) {
+          acc[id].count += 1;
+        } else {
+          const ingredient = ingredients.find((item) => item._id === id);
+
           if (ingredient) {
-            acc[item] = {
+            acc[id] = {
               ...ingredient,
               count: 1,
             };
           }
-        } else {
-          acc[item].count++;
         }
 
         return acc;
@@ -45,20 +63,54 @@ export const OrderInfo = (): React.JSX.Element => {
     );
 
     const total = Object.values(ingredientsInfo).reduce(
-      (acc, item) => acc + item.price * item.count,
+      (sum, ingredient) => sum + ingredient.price * ingredient.count,
       0
     );
 
     return {
       ...orderData,
       ingredientsInfo,
-      date,
+      date: new Date(orderData.createdAt),
       total,
     };
-  }, [orderData, ingredients]);
+  }, [orderData, orderNumber, ingredients]);
+
+  const handleRetry = (): void => {
+    if (isValidNumber) {
+      void dispatch(fetchOrderByNumber(orderNumber));
+    }
+
+    if (ingredientsStatus === 'failed') {
+      void dispatch(fetchIngredients());
+    }
+  };
+
+  if (!isValidNumber) {
+    return <p>Некорректный номер заказа.</p>;
+  }
+
+  if (orderStatus === 'failed' || ingredientsStatus === 'failed') {
+    return (
+      <div>
+        <p>Не удалось загрузить данные: {orderError ?? ingredientsError}</p>
+        <button type="button" onClick={handleRetry}>
+          Попробовать снова
+        </button>
+      </div>
+    );
+  }
+
+  if (
+    orderStatus === 'idle' ||
+    orderStatus === 'loading' ||
+    ingredientsStatus === 'idle' ||
+    ingredientsStatus === 'loading'
+  ) {
+    return <Preloader />;
+  }
 
   if (!orderInfo) {
-    return <Preloader />;
+    return <p>Не удалось подготовить данные заказа.</p>;
   }
 
   return <OrderInfoUI orderInfo={orderInfo} />;
