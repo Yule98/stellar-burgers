@@ -22,6 +22,7 @@ import {
 } from '../../services/userSlice';
 
 import type { ReactNode } from 'react';
+import type { Location } from 'react-router-dom';
 
 import '../../index.css';
 
@@ -89,33 +90,40 @@ const RouteComponent = (): React.JSX.Element => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const closeIngredientModal = (): void => {
-    void navigate('/', { replace: true });
-  };
+  const locationState = location.state as {
+    background?: Location;
+  } | null;
 
-  const closeFeedOrderModal = (): void => {
-    void navigate('/feed', { replace: true });
-  };
+  const background = locationState?.background;
 
-  const closeProfileOrderModal = (): void => {
-    void navigate('/profile/orders', { replace: true });
+  const handleModalClose = (): void => {
+    void navigate(-1);
   };
-
-  const backgroundPath = /^\/ingredients\/[^/]+\/?$/.test(location.pathname)
-    ? '/'
-    : /^\/feed\/[^/]+\/?$/.test(location.pathname)
-      ? '/feed'
-      : /^\/profile\/orders\/[^/]+\/?$/.test(location.pathname)
-        ? '/profile/orders'
-        : null;
 
   return (
     <>
-      <Routes
-        location={backgroundPath ? { ...location, pathname: backgroundPath } : location}
-      >
+      <Routes location={background ?? location}>
         <Route path="/" element={<ConstructorPage />} />
         <Route path="/feed" element={<Feed />} />
+
+        <Route
+          path="/ingredients/:id"
+          element={
+            <main className="pt-10">
+              <h1 className="text text_type_main-large">Детали ингредиента</h1>
+              <IngredientDetails />
+            </main>
+          }
+        />
+
+        <Route
+          path="/feed/:number"
+          element={
+            <main className="pt-10">
+              <OrderInfo />
+            </main>
+          }
+        />
 
         <Route
           path="/login"
@@ -171,15 +179,26 @@ const RouteComponent = (): React.JSX.Element => {
           }
         />
 
+        <Route
+          path="/profile/orders/:number"
+          element={
+            <ProtectedRoute>
+              <main className="pt-10">
+                <OrderInfo />
+              </main>
+            </ProtectedRoute>
+          }
+        />
+
         <Route path="*" element={<NotFound404 />} />
       </Routes>
 
-      {backgroundPath !== null && (
+      {background && (
         <Routes>
           <Route
             path="/ingredients/:id"
             element={
-              <Modal title="Детали ингредиента" onClose={closeIngredientModal}>
+              <Modal title="Детали ингредиента" onClose={handleModalClose}>
                 <IngredientDetails />
               </Modal>
             }
@@ -188,7 +207,7 @@ const RouteComponent = (): React.JSX.Element => {
           <Route
             path="/feed/:number"
             element={
-              <Modal title="Информация о заказе" onClose={closeFeedOrderModal}>
+              <Modal title="Информация о заказе" onClose={handleModalClose}>
                 <OrderInfo />
               </Modal>
             }
@@ -198,7 +217,7 @@ const RouteComponent = (): React.JSX.Element => {
             path="/profile/orders/:number"
             element={
               <ProtectedRoute>
-                <Modal title="Информация о заказе" onClose={closeProfileOrderModal}>
+                <Modal title="Информация о заказе" onClose={handleModalClose}>
                   <OrderInfo />
                 </Modal>
               </ProtectedRoute>
@@ -209,5 +228,4 @@ const RouteComponent = (): React.JSX.Element => {
     </>
   );
 };
-
 export default App;

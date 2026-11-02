@@ -18,9 +18,9 @@ export const OrderInfo = (): React.JSX.Element => {
     /^\d+$/.test(number ?? '') && Number.isSafeInteger(orderNumber) && orderNumber > 0;
 
   const {
-    order: orderData,
-    status: orderStatus,
-    error: orderError,
+    viewedOrder: orderData,
+    viewedOrderStatus: orderStatus,
+    viewedOrderError: orderError,
   } = useSelector((state) => state.order);
 
   const {
@@ -36,7 +36,7 @@ export const OrderInfo = (): React.JSX.Element => {
   }, [dispatch, orderNumber, isValidNumber]);
 
   const orderInfo = useMemo(() => {
-    if (!orderData || orderData.number !== orderNumber || !ingredients.length) {
+    if (orderData?.number !== orderNumber || !ingredients.length) {
       return null;
     }
 

@@ -8,16 +8,22 @@ type TOrderState = {
   order: TOrder | null;
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
-  currentRequestId: string | null;
   orderRequest: boolean;
+  viewedOrder: TOrder | null;
+  viewedOrderStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
+  viewedOrderError: string | null;
+  currentRequestId: string | null;
 };
 
 const initialState: TOrderState = {
   order: null,
   status: 'idle',
   error: null,
-  currentRequestId: null,
   orderRequest: false,
+  viewedOrder: null,
+  viewedOrderStatus: 'idle',
+  viewedOrderError: null,
+  currentRequestId: null,
 };
 
 export const fetchOrderByNumber = createAsyncThunk(
@@ -60,30 +66,33 @@ const orderSlice = createSlice({
       state.order = null;
       state.status = 'idle';
       state.error = null;
-      state.currentRequestId = null;
       state.orderRequest = false;
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(fetchOrderByNumber.pending, (state, action) => {
-        state.status = 'loading';
-        state.order = null;
-        state.error = null;
+        state.viewedOrderStatus = 'loading';
+        state.viewedOrder = null;
+        state.viewedOrderError = null;
         state.currentRequestId = action.meta.requestId;
       })
       .addCase(fetchOrderByNumber.fulfilled, (state, action) => {
-        if (state.currentRequestId !== action.meta.requestId) return;
+        if (state.currentRequestId !== action.meta.requestId) {
+          return;
+        }
 
-        state.status = 'succeeded';
-        state.order = action.payload;
+        state.viewedOrderStatus = 'succeeded';
+        state.viewedOrder = action.payload;
         state.currentRequestId = null;
       })
       .addCase(fetchOrderByNumber.rejected, (state, action) => {
-        if (state.currentRequestId !== action.meta.requestId) return;
+        if (state.currentRequestId !== action.meta.requestId) {
+          return;
+        }
 
-        state.status = 'failed';
-        state.error = action.error.message ?? 'Не удалось загрузить заказ';
+        state.viewedOrderStatus = 'failed';
+        state.viewedOrderError = action.error.message ?? 'Не удалось загрузить заказ';
         state.currentRequestId = null;
       })
       .addCase(fetchNewOrder.pending, (state) => {
