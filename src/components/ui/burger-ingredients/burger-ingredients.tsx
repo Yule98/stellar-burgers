@@ -18,6 +18,7 @@ export const BurgerIngredientsUI = memo(function BurgerIngredientsUI({
   mainsRef,
   saucesRef,
   onTabClick,
+  onIngredientClick,
 }: BurgerIngredientsUIProps): React.JSX.Element {
   return (
     <>
@@ -41,18 +42,21 @@ export const BurgerIngredientsUI = memo(function BurgerIngredientsUI({
             titleRef={titleBunRef}
             ingredients={buns}
             ref={bunsRef}
+            onIngredientClick={onIngredientClick}
           />
           <IngredientsCategory
             title="Начинки"
             titleRef={titleMainRef}
             ingredients={mains}
             ref={mainsRef}
+            onIngredientClick={onIngredientClick}
           />
           <IngredientsCategory
             title="Соусы"
             titleRef={titleSaucesRef}
             ingredients={sauces}
             ref={saucesRef}
+            onIngredientClick={onIngredientClick}
           />
         </div>
       </section>

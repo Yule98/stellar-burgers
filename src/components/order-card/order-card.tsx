@@ -2,6 +2,8 @@ import { OrderCardUI } from '@ui';
 import { memo, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 
+import { useSelector } from '../../services/store';
+
 import type { OrderCardProps } from './type';
 import type { TIngredient } from '@utils-types';
 
@@ -12,8 +14,7 @@ export const OrderCard = memo(function OrderCard({
 }: OrderCardProps): React.JSX.Element | null {
   const location = useLocation();
 
-  // TODO: Взять переменную из стора
-  const ingredients: TIngredient[] = [];
+  const ingredients = useSelector((state) => state.ingredients.ingredients);
 
   const orderInfo = useMemo(() => {
     if (!ingredients.length) return null;
@@ -21,7 +22,9 @@ export const OrderCard = memo(function OrderCard({
     const ingredientsInfo = order.ingredients.reduce(
       (acc: TIngredient[], item: string) => {
         const ingredient = ingredients.find((ing) => ing._id === item);
+
         if (ingredient) return [...acc, ingredient];
+
         return acc;
       },
       []
@@ -37,6 +40,7 @@ export const OrderCard = memo(function OrderCard({
         : 0;
 
     const date = new Date(order.createdAt);
+
     return {
       ...order,
       ingredientsInfo,
