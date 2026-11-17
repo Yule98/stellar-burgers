@@ -96,9 +96,9 @@ const addIngredient = async (
   page: Page,
   ingredient: TIngredient
 ): Promise<void> => {
-  const ingredientCard = page
-    .locator('li', { hasText: ingredient.name })
-    .first();
+  const ingredientCard = page.locator('li', {
+    hasText: ingredient.name,
+  });
 
   await ingredientCard.getByRole('button', { name: 'Добавить' }).click();
 };
@@ -108,19 +108,49 @@ test('add ingredients to constructor works correctly', async ({ page }) => {
   await addIngredient(page, main);
   await addIngredient(page, sauce);
 
-  await expect(page.getByText(bun.name).nth(1)).toBeVisible();
-  await expect(page.getByText(main.name).nth(1)).toBeVisible();
-  await expect(page.getByText(sauce.name).nth(1)).toBeVisible();
+  const constructor = page.locator(
+    '[class*="burger_constructor"]'
+  );
+  
+  await expect(
+    constructor.getByText(`${bun.name} (верх)`)
+  ).toBeVisible();
+  
+  await expect(
+    constructor.getByText(main.name)
+  ).toBeVisible();
+  
+  await expect(
+    constructor.getByText(sauce.name)
+  ).toBeVisible();
 });
 
 test('ingredient modal opens and closes by close button', async ({ page }) => {
-  await page.getByText(bun.name).first().click();
+  await page.goto('/');
 
-  await expect(page.getByText('Детали ингредиента')).toBeVisible();
+
+  await page.getByText(bun.name).click();
+
+
+  const modal = page.locator('[class*="modal"]');
+
+
+  await expect(
+    modal.getByText('Детали ингредиента')
+  ).toBeVisible();
+
+
+  await expect(
+    modal.getByText(bun.name)
+  ).toBeVisible();
+
 
   await page.getByRole('button', { name: 'Закрыть' }).click();
 
-  await expect(page.getByText('Детали ингредиента')).toHaveCount(0);
+
+  await expect(
+    modal.getByText('Детали ингредиента')
+  ).toHaveCount(0);
 });
 
 test('ingredient modal closes by overlay click', async ({ page }) => {
@@ -142,10 +172,20 @@ test('user can create an order', async ({ page }) => {
 
   await page.getByRole('button', { name: /оформить заказ/i }).click();
 
-  await expect(page.getByText('12345')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Закрыть' }).click();
+const modal = page.locator('[class*="modal"]');
 
-  await expect(page.getByText('12345')).toHaveCount(0);
+
+await expect(
+  modal.getByText('12345')
+).toBeVisible();
+
+
+await page.getByRole('button', { name: 'Закрыть' }).click();
+
+
+await expect(
+  modal.getByText('12345')
+).toHaveCount(0);
   await expect(page.getByText('Выберите булки').first()).toBeVisible();
 });
